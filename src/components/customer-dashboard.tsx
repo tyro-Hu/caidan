@@ -92,6 +92,12 @@ export function CustomerDashboard() {
   }, [cart, dishes]);
 
   const total = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+  const activeOrders = orders.filter(
+    (order) => order.status === "pending" || order.status === "accepted" || order.status === "ready",
+  );
+  const historyOrders = orders.filter(
+    (order) => order.status === "completed" || order.status === "cancelled",
+  );
 
   function changeQuantity(dishId: string, delta: number) {
     setCart((current) => {
@@ -292,27 +298,70 @@ export function CustomerDashboard() {
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[rgba(109,77,63,0.46)]">
                 我的订单
               </p>
-              <div className="mt-4 space-y-3">
-                {orders.length === 0 ? (
-                  <div className="rounded-[20px] border border-dashed border-line bg-white/70 p-4 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
-                    还没有订单记录。
+              <div className="mt-4 space-y-4">
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[#ff6076]">进行中</p>
+                    <span className="text-xs text-[rgba(109,77,63,0.56)]">
+                      {activeOrders.length} 单
+                    </span>
                   </div>
-                ) : (
-                  orders.map((order) => (
-                    <div key={order.id} className="rounded-[20px] border border-line bg-white/70 p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-[#ff6076]">{order.id}</p>
-                          <p className="mt-2 text-base font-semibold">{statusLabel(order.status)}</p>
-                        </div>
-                        <p className="text-sm font-semibold">{formatCurrency(order.total)}</p>
+                  <div className="space-y-3">
+                    {activeOrders.length === 0 ? (
+                      <div className="rounded-[20px] border border-dashed border-line bg-white/70 p-4 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
+                        当前没有进行中的订单。
                       </div>
-                      <p className="mt-3 text-sm leading-7 text-[rgba(109,77,63,0.62)]">
-                        {order.items.map((item) => `${item.name} x${item.quantity}`).join(" / ")}
-                      </p>
-                    </div>
-                  ))
-                )}
+                    ) : (
+                      activeOrders.map((order) => (
+                        <div key={order.id} className="rounded-[20px] border border-line bg-white/70 p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-semibold text-[#ff6076]">{order.id}</p>
+                              <p className="mt-2 text-base font-semibold">{statusLabel(order.status)}</p>
+                            </div>
+                            <p className="text-sm font-semibold">{formatCurrency(order.total)}</p>
+                          </div>
+                          <p className="mt-3 text-sm leading-7 text-[rgba(109,77,63,0.62)]">
+                            {order.items.map((item) => `${item.name} x${item.quantity}`).join(" / ")}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[rgba(109,77,63,0.62)]">历史订单</p>
+                    <span className="text-xs text-[rgba(109,77,63,0.56)]">
+                      {historyOrders.length} 单
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {historyOrders.length === 0 ? (
+                      <div className="rounded-[20px] border border-dashed border-line bg-white/70 p-4 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
+                        还没有历史订单。
+                      </div>
+                    ) : (
+                      historyOrders.map((order) => (
+                        <div key={order.id} className="rounded-[20px] border border-line bg-white/70 p-4 opacity-85">
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="text-sm font-semibold text-[rgba(109,77,63,0.56)]">
+                                {order.id}
+                              </p>
+                              <p className="mt-2 text-base font-semibold">{statusLabel(order.status)}</p>
+                            </div>
+                            <p className="text-sm font-semibold">{formatCurrency(order.total)}</p>
+                          </div>
+                          <p className="mt-3 text-sm leading-7 text-[rgba(109,77,63,0.62)]">
+                            {order.items.map((item) => `${item.name} x${item.quantity}`).join(" / ")}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
             </section>
 

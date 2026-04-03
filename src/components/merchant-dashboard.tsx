@@ -225,6 +225,34 @@ export function MerchantDashboard() {
   }
 
   const pendingOrders = orders.filter((order) => order.status === "pending");
+  const groupedOrders = [
+    {
+      title: "待接单",
+      tone: "text-[#ff6076]",
+      empty: "当前没有待接单的新订单。",
+      orders: orders.filter((order) => order.status === "pending"),
+    },
+    {
+      title: "制作中",
+      tone: "text-[#d97a37]",
+      empty: "当前没有制作中的订单。",
+      orders: orders.filter((order) => order.status === "accepted"),
+    },
+    {
+      title: "待取餐",
+      tone: "text-[#3a7b63]",
+      empty: "当前没有待取餐订单。",
+      orders: orders.filter((order) => order.status === "ready"),
+    },
+    {
+      title: "已结束",
+      tone: "text-[rgba(109,77,63,0.62)]",
+      empty: "当前没有历史订单。",
+      orders: orders.filter(
+        (order) => order.status === "completed" || order.status === "cancelled",
+      ),
+    },
+  ];
 
   if (!ready || !session) {
     return <main className="flex-1 px-4 py-10">正在进入商家后台...</main>;
@@ -286,85 +314,106 @@ export function MerchantDashboard() {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-2">
-          {orders.map((order) => {
-            const action = nextAction(order.status);
+          {groupedOrders.map((group) => (
+            <article key={group.title} className="panel rounded-[28px] p-5">
+              <div className="flex items-center justify-between">
+                <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${group.tone}`}>
+                  {group.title}
+                </p>
+                <span className="text-xs text-[rgba(109,77,63,0.56)]">
+                  {group.orders.length} 单
+                </span>
+              </div>
 
-            return (
-              <article key={order.id} className="panel rounded-[28px] p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-[#ff6076]">{order.id}</p>
-                    <h2 className="mt-2 text-2xl font-semibold">{order.customerName}</h2>
+              <div className="mt-4 space-y-4">
+                {group.orders.length === 0 ? (
+                  <div className="rounded-[20px] border border-dashed border-line bg-white/70 p-4 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
+                    {group.empty}
                   </div>
-                  <div className="text-right">
-                    <p className="rounded-full bg-[rgba(255,140,163,0.16)] px-3 py-1 text-sm font-semibold text-[#ff6076]">
-                      {statusLabel(order.status)}
-                    </p>
-                    <p className="mt-3 text-lg font-semibold">{formatCurrency(order.total)}</p>
-                  </div>
-                </div>
+                ) : (
+                  group.orders.map((order) => {
+                    const action = nextAction(order.status);
 
-                <div className="mt-4 space-y-3">
-                  {order.items.map((item) => (
-                    <div
-                      key={`${order.id}-${item.dishId}`}
-                      className="rounded-[20px] border border-line bg-white/72 p-4"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            className="h-14 w-14 rounded-[16px] border border-white/70 object-cover"
-                            width={56}
-                            height={56}
-                            unoptimized
-                          />
+                    return (
+                      <div key={order.id} className="rounded-[22px] border border-line bg-white/72 p-4">
+                        <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-base font-semibold">{item.name}</p>
-                            <p className="mt-1 text-sm text-[rgba(109,77,63,0.56)]">
-                              x{item.quantity}
+                            <p className="text-sm font-semibold text-[#ff6076]">{order.id}</p>
+                            <h2 className="mt-2 text-xl font-semibold">{order.customerName}</h2>
+                          </div>
+                          <div className="text-right">
+                            <p className="rounded-full bg-[rgba(255,140,163,0.16)] px-3 py-1 text-sm font-semibold text-[#ff6076]">
+                              {statusLabel(order.status)}
                             </p>
+                            <p className="mt-3 text-base font-semibold">{formatCurrency(order.total)}</p>
                           </div>
                         </div>
-                        <p className="text-sm font-semibold">{formatCurrency(item.subtotal)}</p>
+
+                        <div className="mt-4 space-y-3">
+                          {order.items.map((item) => (
+                            <div
+                              key={`${order.id}-${item.dishId}`}
+                              className="rounded-[18px] border border-line bg-white/72 p-3"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <Image
+                                    src={item.image}
+                                    alt={item.name}
+                                    className="h-12 w-12 rounded-[14px] border border-white/70 object-cover"
+                                    width={48}
+                                    height={48}
+                                    unoptimized
+                                  />
+                                  <div>
+                                    <p className="text-sm font-semibold">{item.name}</p>
+                                    <p className="mt-1 text-xs text-[rgba(109,77,63,0.56)]">
+                                      x{item.quantity}
+                                    </p>
+                                  </div>
+                                </div>
+                                <p className="text-sm font-semibold">{formatCurrency(item.subtotal)}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {order.note ? (
+                          <p className="mt-3 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
+                            备注：{order.note}
+                          </p>
+                        ) : null}
+
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          {action ? (
+                            <button
+                              type="button"
+                              disabled={updatingId === order.id}
+                              onClick={() => handleUpdateStatus(order.id, action.value)}
+                              className="rounded-full bg-[#ff8ca3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ff728d]"
+                            >
+                              {updatingId === order.id ? "处理中..." : action.label}
+                            </button>
+                          ) : null}
+
+                          {order.status !== "cancelled" && order.status !== "completed" ? (
+                            <button
+                              type="button"
+                              disabled={updatingId === order.id}
+                              onClick={() => handleUpdateStatus(order.id, "cancelled")}
+                              className="rounded-full border border-line bg-white/78 px-4 py-2 text-sm font-semibold hover:bg-white"
+                            >
+                              无法接单
+                            </button>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                {order.note ? (
-                  <p className="mt-4 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
-                    备注：{order.note}
-                  </p>
-                ) : null}
-
-                <div className="mt-5 flex flex-wrap gap-3">
-                  {action ? (
-                    <button
-                      type="button"
-                      disabled={updatingId === order.id}
-                      onClick={() => handleUpdateStatus(order.id, action.value)}
-                      className="rounded-full bg-[#ff8ca3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ff728d]"
-                    >
-                      {updatingId === order.id ? "处理中..." : action.label}
-                    </button>
-                  ) : null}
-
-                  {order.status !== "cancelled" && order.status !== "completed" ? (
-                    <button
-                      type="button"
-                      disabled={updatingId === order.id}
-                      onClick={() => handleUpdateStatus(order.id, "cancelled")}
-                      className="rounded-full border border-line bg-white/78 px-4 py-2 text-sm font-semibold hover:bg-white"
-                    >
-                      无法接单
-                    </button>
-                  ) : null}
-                </div>
-              </article>
-            );
-          })}
+                    );
+                  })
+                )}
+              </div>
+            </article>
+          ))}
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
