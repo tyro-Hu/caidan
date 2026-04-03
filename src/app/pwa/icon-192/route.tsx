@@ -1,12 +1,18 @@
-import { ImageResponse } from "next/og";
-import { BrandIconCanvas } from "@/lib/brand-art";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-static";
 
 export async function GET() {
-  return new ImageResponse(<BrandIconCanvas size={192} />, {
-    width: 192,
-    height: 192,
+  const icon = await readFile(
+    path.join(process.cwd(), "resources", "generated-icons", "beibei-icon-192.png"),
+  );
+
+  return new Response(icon, {
+    headers: {
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
   });
 }

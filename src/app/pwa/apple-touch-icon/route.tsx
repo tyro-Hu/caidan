@@ -1,12 +1,18 @@
-import { ImageResponse } from "next/og";
-import { BrandIconCanvas } from "@/lib/brand-art";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-static";
 
 export async function GET() {
-  return new ImageResponse(<BrandIconCanvas size={180} />, {
-    width: 180,
-    height: 180,
+  const icon = await readFile(
+    path.join(process.cwd(), "resources", "generated-icons", "beibei-apple-touch-180.png"),
+  );
+
+  return new Response(icon, {
+    headers: {
+      "Content-Type": "image/png",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
   });
 }
