@@ -137,6 +137,26 @@ async function createFileStore() {
     async listAvailableDishes() {
       return store.dishes.filter((dish) => dish.available);
     },
+    async listAllDishes() {
+      return [...store.dishes].sort((a, b) => a.category.localeCompare(b.category));
+    },
+    async updateDish(dishId, payload) {
+      const dish = store.dishes.find((item) => item.id === dishId) ?? null;
+      if (!dish) {
+        return null;
+      }
+
+      if (typeof payload.price === "number") {
+        dish.price = payload.price;
+      }
+
+      if (typeof payload.available === "boolean") {
+        dish.available = payload.available;
+      }
+
+      await persist();
+      return dish;
+    },
     async listCustomerOrders(userId) {
       return store.orders
         .filter((order) => order.customerId === userId)
@@ -342,6 +362,36 @@ async function createPostgresStore(databaseUrl) {
       );
 
       return result.rows;
+    },
+    async listAllDishes() {
+      const result = await pool.query(
+        `
+          select id, name, price, image, category, description, available
+          from dishes
+          order by category asc, price asc
+        `,
+      );
+
+      return result.rows;
+    },
+    async updateDish(dishId, payload) {
+      const result = await pool.query(
+        `
+          update dishes
+          set
+            price = coalesce($2, price),
+            available = coalesce($3, available)
+          where id = $1
+          returning id, name, price, image, category, description, available
+        `,
+        [
+          dishId,
+          typeof payload.price === "number" ? payload.price : null,
+          typeof payload.available === "boolean" ? payload.available : null,
+        ],
+      );
+
+      return result.rows[0] ?? null;
     },
     async listCustomerOrders(userId) {
       const result = await pool.query(

@@ -9,11 +9,14 @@ import type { Order } from "@/lib/app-types";
 import { AccountPanel } from "@/components/account-panel";
 import {
   createMerchantEventsSource,
+  fetchManageDishes,
   fetchMerchantOrders,
+  updateDish,
   updateOrderStatus,
 } from "@/lib/api-client";
 import { clearStoredSession } from "@/lib/client-storage";
 import { useRoleGuard } from "@/components/role-guard";
+import type { Dish } from "@/lib/app-types";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("zh-CN", {
@@ -110,8 +113,10 @@ export function MerchantDashboard() {
   const router = useRouter();
   const { ready, session } = useRoleGuard("merchant");
   const [orders, setOrders] = useState<Order[]>([]);
+  const [dishes, setDishes] = useState<Dish[]>([]);
   const [message, setMessage] = useState("");
   const [updatingId, setUpdatingId] = useState("");
+  const [updatingDishId, setUpdatingDishId] = useState("");
   const seenOrdersRef = useRef<Set<string>>(new Set());
 
   async function loadOrders(token: string) {
@@ -128,6 +133,11 @@ export function MerchantDashboard() {
     setOrders(nextOrders);
   }
 
+  async function loadDishes(token: string) {
+    const { dishes: nextDishes } = await fetchManageDishes(token);
+    setDishes(nextDishes);
+  }
+
   useEffect(() => {
     if (!session) {
       return;
@@ -140,9 +150,15 @@ export function MerchantDashboard() {
     loadOrders(session.token).catch((error) => {
       setMessage(error instanceof Error ? error.message : "加载订单失败");
     });
+    loadDishes(session.token).catch(() => {
+      return undefined;
+    });
 
     const timer = window.setInterval(() => {
       loadOrders(session.token).catch(() => {
+        return undefined;
+      });
+      loadDishes(session.token).catch(() => {
         return undefined;
       });
     }, 4000);
@@ -179,6 +195,27 @@ export function MerchantDashboard() {
       setMessage(error instanceof Error ? error.message : "更新订单失败");
     } finally {
       setUpdatingId("");
+    }
+  }
+
+  async function handleUpdateDish(
+    dishId: string,
+    payload: { price?: number; available?: boolean },
+  ) {
+    if (!session) {
+      return;
+    }
+
+    setUpdatingDishId(dishId);
+    setMessage("");
+
+    try {
+      await updateDish(session.token, dishId, payload);
+      await loadDishes(session.token);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "更新菜品失败");
+    } finally {
+      setUpdatingDishId("");
     }
   }
 
@@ -331,13 +368,103 @@ export function MerchantDashboard() {
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="panel rounded-[28px] p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#ff6076]">
+                  菜单管理
+                </p>
+                <p className="mt-2 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
+                  日常就改两件事：价格、是否上架。
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              {dishes.map((dish) => (
+                <div key={dish.id} className="rounded-[20px] border border-line bg-white/72 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <Image
+                        src={dish.image}
+                        alt={dish.name}
+                        className="h-14 w-14 rounded-[16px] border border-white/70 object-cover"
+                        width={56}
+                        height={56}
+                        unoptimized
+                      />
+                      <div>
+                        <p className="text-base font-semibold">{dish.name}</p>
+                        <p className="mt-1 text-sm text-[rgba(109,77,63,0.56)]">
+                          {dish.category}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        dish.available
+                          ? "bg-[rgba(151,214,190,0.22)] text-[#3a7b63]"
+                          : "bg-[rgba(109,77,63,0.08)] text-[rgba(109,77,63,0.62)]"
+                      }`}
+                    >
+                      {dish.available ? "已上架" : "已下架"}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      disabled={updatingDishId === dish.id}
+                      onClick={() =>
+                        handleUpdateDish(dish.id, {
+                          price: dish.price + 1,
+                        })
+                      }
+                      className="rounded-full border border-line bg-white/78 px-4 py-2 text-sm font-semibold hover:bg-white"
+                    >
+                      加价 1 元
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updatingDishId === dish.id || dish.price <= 1}
+                      onClick={() =>
+                        handleUpdateDish(dish.id, {
+                          price: Math.max(1, dish.price - 1),
+                        })
+                      }
+                      className="rounded-full border border-line bg-white/78 px-4 py-2 text-sm font-semibold hover:bg-white"
+                    >
+                      降价 1 元
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updatingDishId === dish.id}
+                      onClick={() =>
+                        handleUpdateDish(dish.id, {
+                          available: !dish.available,
+                        })
+                      }
+                      className="rounded-full bg-[#ff8ca3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ff728d]"
+                    >
+                      {dish.available ? "下架" : "重新上架"}
+                    </button>
+                    <span className="text-sm font-semibold text-[rgba(109,77,63,0.72)]">
+                      当前价格：{formatCurrency(dish.price)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="panel rounded-[28px] p-5 text-sm leading-7 text-[rgba(109,77,63,0.7)]">
             建议把商家端安卓手机一直保持登录，并把通知权限打开。
             <br />
             这样贝贝一旦在 iPhone 端下单，你这边会更快收到提醒。
           </div>
-          <AccountPanel session={session} />
         </section>
+
+        <AccountPanel session={session} />
       </div>
     </main>
   );

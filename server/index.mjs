@@ -38,6 +38,11 @@ const updatePasswordSchema = z.object({
   nextPassword: z.string().min(6).max(64),
 });
 
+const updateDishSchema = z.object({
+  price: z.number().int().min(1).max(999).optional(),
+  available: z.boolean().optional(),
+});
+
 const store = await createStore();
 const app = express();
 
@@ -240,6 +245,30 @@ app.get("/api/dishes", auth(), async (_req, res) => {
   res.json({
     dishes: await store.listAvailableDishes(),
   });
+});
+
+app.get("/api/dishes/manage", auth("merchant"), async (_req, res) => {
+  res.json({
+    dishes: await store.listAllDishes(),
+  });
+});
+
+app.patch("/api/dishes/:dishId", auth("merchant"), async (req, res) => {
+  const parsed = updateDishSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    res.status(400).json({ message: "菜品更新数据不正确" });
+    return;
+  }
+
+  const dish = await store.updateDish(req.params.dishId, parsed.data);
+
+  if (!dish) {
+    res.status(404).json({ message: "菜品不存在" });
+    return;
+  }
+
+  res.json({ dish });
 });
 
 app.get("/api/orders/customer", auth("customer"), async (req, res) => {

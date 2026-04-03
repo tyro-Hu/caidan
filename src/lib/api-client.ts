@@ -45,6 +45,10 @@ export function fetchDishes(token: string) {
   return request<{ dishes: Dish[] }>("/api/dishes", { token });
 }
 
+export function fetchManageDishes(token: string) {
+  return request<{ dishes: Dish[] }>("/api/dishes/manage", { token });
+}
+
 export function fetchCustomerOrders(token: string) {
   return request<{ orders: Order[] }>("/api/orders/customer", { token });
 }
@@ -88,6 +92,18 @@ export function updatePassword(
 ) {
   return request<{ ok: boolean }>("/api/me/password", {
     method: "POST",
+    token,
+    body: payload,
+  });
+}
+
+export function updateDish(
+  token: string,
+  dishId: string,
+  payload: { price?: number; available?: boolean },
+) {
+  return request<{ dish: Dish }>(`/api/dishes/${dishId}`, {
+    method: "PATCH",
     token,
     body: payload,
   });
