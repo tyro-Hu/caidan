@@ -81,3 +81,14 @@ export function createMerchantEventsSource(token: string) {
   url.searchParams.set("token", token);
   return new EventSource(url);
 }
+
+export function updatePassword(
+  token: string,
+  payload: { currentPassword: string; nextPassword: string },
+) {
+  return request<{ ok: boolean }>("/api/me/password", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+}

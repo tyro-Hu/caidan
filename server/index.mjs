@@ -33,6 +33,11 @@ const updateOrderSchema = z.object({
   status: z.enum(orderStatuses),
 });
 
+const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  nextPassword: z.string().min(6).max(64),
+});
+
 const store = await createStore();
 const app = express();
 
@@ -201,6 +206,34 @@ app.get("/api/me", auth(), async (req, res) => {
   }
 
   res.json({ user: sanitizeUser(user) });
+});
+
+app.post("/api/me/password", auth(), async (req, res) => {
+  const parsed = updatePasswordSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    res.status(400).json({ message: "新密码至少需要 6 位" });
+    return;
+  }
+
+  const user = await store.findUserById(req.user.sub);
+
+  if (!user) {
+    res.status(404).json({ message: "账号不存在" });
+    return;
+  }
+
+  const matched = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
+
+  if (!matched) {
+    res.status(400).json({ message: "当前密码不正确" });
+    return;
+  }
+
+  const passwordHash = await bcrypt.hash(parsed.data.nextPassword, 10);
+  await store.updateUserPassword(user.id, passwordHash);
+
+  res.json({ ok: true });
 });
 
 app.get("/api/dishes", auth(), async (_req, res) => {

@@ -124,6 +124,16 @@ async function createFileStore() {
     async findUserById(userId) {
       return store.users.find((user) => user.id === userId) ?? null;
     },
+    async updateUserPassword(userId, passwordHash) {
+      const user = store.users.find((item) => item.id === userId) ?? null;
+      if (!user) {
+        return null;
+      }
+
+      user.passwordHash = passwordHash;
+      await persist();
+      return user;
+    },
     async listAvailableDishes() {
       return store.dishes.filter((dish) => dish.available);
     },
@@ -304,6 +314,19 @@ async function createPostgresStore(databaseUrl) {
           limit 1
         `,
         [userId],
+      );
+
+      return result.rows[0] ?? null;
+    },
+    async updateUserPassword(userId, passwordHash) {
+      const result = await pool.query(
+        `
+          update users
+          set password_hash = $2
+          where id = $1
+          returning id, username, password_hash as "passwordHash", role, display_name as "displayName"
+        `,
+        [userId, passwordHash],
       );
 
       return result.rows[0] ?? null;

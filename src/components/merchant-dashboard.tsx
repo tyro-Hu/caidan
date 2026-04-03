@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import type { Order } from "@/lib/app-types";
+import { AccountPanel } from "@/components/account-panel";
 import {
   createMerchantEventsSource,
   fetchMerchantOrders,
@@ -327,6 +328,15 @@ export function MerchantDashboard() {
               </article>
             );
           })}
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="panel rounded-[28px] p-5 text-sm leading-7 text-[rgba(109,77,63,0.7)]">
+            建议把商家端安卓手机一直保持登录，并把通知权限打开。
+            <br />
+            这样贝贝一旦在 iPhone 端下单，你这边会更快收到提醒。
+          </div>
+          <AccountPanel session={session} />
         </section>
       </div>
     </main>

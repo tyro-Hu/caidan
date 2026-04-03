@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Dish, Order } from "@/lib/app-types";
 import { createOrder, fetchCustomerOrders, fetchDishes } from "@/lib/api-client";
 import { clearStoredSession } from "@/lib/client-storage";
+import { AccountPanel } from "@/components/account-panel";
 import { useRoleGuard } from "@/components/role-guard";
 
 function formatCurrency(value: number) {
@@ -314,6 +315,10 @@ export function CustomerDashboard() {
                 )}
               </div>
             </section>
+
+            <div className="mt-6">
+              <AccountPanel session={session} />
+            </div>
           </aside>
         </div>
       </div>
