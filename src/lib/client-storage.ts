@@ -4,7 +4,7 @@ const apiBaseKey = "beibei_api_base_url";
 const sessionKey = "beibei_session";
 
 export function getDefaultApiBase() {
-  return process.env.NEXT_PUBLIC_API_BASE ?? "https://beibeicaidan.onrender.com";
+  return process.env.NEXT_PUBLIC_API_BASE ?? "https://beibei-dian-cai-api.onrender.com";
 }
 
 export function normalizeApiBase(value: string) {
