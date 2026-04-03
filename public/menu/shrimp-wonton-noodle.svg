@@ -1,0 +1,14 @@
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="800" rx="120" fill="#FDF7F3"/>
+  <circle cx="400" cy="400" r="250" fill="#FFFDFB" stroke="#E9D9CE" stroke-width="18"/>
+  <circle cx="400" cy="404" r="164" fill="#EFD9B4"/>
+  <circle cx="400" cy="404" r="142" fill="#D6A86A"/>
+  <path d="M284 400C308 344 356 320 408 320C462 320 504 344 520 392C510 468 458 512 398 512C334 512 288 468 284 400Z" fill="#F3D28E"/>
+  <path d="M298 386C330 420 360 432 404 432C448 432 484 418 506 386" stroke="#F8EDC8" stroke-width="18" stroke-linecap="round"/>
+  <path d="M292 426C322 460 354 474 398 474C442 474 476 462 506 424" stroke="#F8EDC8" stroke-width="18" stroke-linecap="round"/>
+  <path d="M312 342C340 324 372 320 398 322C362 356 346 386 346 420C320 406 302 380 312 342Z" fill="#F39A77"/>
+  <path d="M490 350C470 324 440 320 414 326C452 356 470 386 470 418C492 406 504 384 490 350Z" fill="#F39A77"/>
+  <path d="M350 294C380 270 426 270 450 294" stroke="#7DBE8C" stroke-width="18" stroke-linecap="round"/>
+  <rect x="214" y="574" width="372" height="52" rx="26" fill="#F39A77" fill-opacity="0.14"/>
+  <text x="400" y="608" text-anchor="middle" font-size="42" fill="#8D604F" font-family="PingFang SC, Microsoft YaHei, sans-serif">鲜虾云吞面</text>
+</svg>

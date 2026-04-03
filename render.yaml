@@ -1,0 +1,23 @@
+databases:
+  - name: beibei-dian-cai-db
+    databaseName: beibei_dian_cai
+    user: beibei_dian_cai
+    plan: free
+
+services:
+  - type: web
+    name: beibei-dian-cai-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run server:start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: beibei-dian-cai-db
+          property: connectionString

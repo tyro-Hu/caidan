@@ -1,0 +1,14 @@
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="800" rx="120" fill="#FFF5EF"/>
+  <circle cx="400" cy="400" r="250" fill="#FFFDF8" stroke="#EAD8CA" stroke-width="18"/>
+  <ellipse cx="400" cy="430" rx="160" ry="120" fill="#FFF4D7"/>
+  <path d="M270 350C300 300 360 280 420 290C500 304 540 365 530 430C520 500 450 550 380 540C300 528 250 468 250 410C250 389 257 368 270 350Z" fill="#E96552"/>
+  <path d="M296 366C318 336 358 322 404 328C468 336 504 376 500 430C494 484 442 520 390 516C334 512 290 470 290 418C290 398 292 384 296 366Z" fill="#F7856C"/>
+  <path d="M332 356C352 334 384 322 420 328C458 334 490 356 500 390C468 418 442 430 402 430C366 430 338 420 316 394C318 380 324 368 332 356Z" fill="#A74C3E"/>
+  <circle cx="470" cy="330" r="54" fill="#FFFDF8" stroke="#E6D4BF" stroke-width="12"/>
+  <circle cx="470" cy="330" r="24" fill="#F7C84C"/>
+  <path d="M310 292C330 254 384 240 430 256" stroke="#8EC48E" stroke-width="22" stroke-linecap="round"/>
+  <path d="M258 446C286 474 322 490 364 494" stroke="#8EC48E" stroke-width="20" stroke-linecap="round"/>
+  <rect x="236" y="574" width="328" height="52" rx="26" fill="#E96552" fill-opacity="0.12"/>
+  <text x="400" y="608" text-anchor="middle" font-size="42" fill="#8D604F" font-family="PingFang SC, Microsoft YaHei, sans-serif">番茄肥牛饭</text>
+</svg>

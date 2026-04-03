@@ -1,0 +1,50 @@
+{
+  "name": "caipu",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "dev:all": "concurrently -n web,api \"npm run dev\" \"npm run server:dev\"",
+    "build": "next build",
+    "start": "next start",
+    "server:dev": "node --watch server/index.mjs",
+    "server:start": "node server/index.mjs",
+    "lint": "eslint",
+    "native:doctor": "zsh scripts/native-doctor.sh",
+    "native:brand": "zsh scripts/apply-brand-assets.sh",
+    "native:sync": "npm run build && npx cap sync",
+    "native:apk": "zsh scripts/android-build-debug.sh",
+    "native:android": "npm run build && npx cap sync android && npx cap open android",
+    "native:ios": "npm run build && npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0",
+    "@capacitor/local-notifications": "^8.0.2",
+    "bcryptjs": "^3.0.3",
+    "concurrently": "^9.2.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "next": "16.2.1",
+    "pg": "^8.20.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.0",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
