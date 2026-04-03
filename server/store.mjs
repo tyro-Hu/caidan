@@ -188,6 +188,25 @@ async function createFileStore() {
       await persist();
       return dish;
     },
+    async deleteDish(dishId) {
+      const usedByOrder = store.orders.some((order) =>
+        order.items.some((item) => item.dishId === dishId),
+      );
+
+      if (usedByOrder) {
+        return { error: "订单里已经引用过这个菜品，不能直接删除。" };
+      }
+
+      const index = store.dishes.findIndex((item) => item.id === dishId);
+
+      if (index === -1) {
+        return null;
+      }
+
+      const [removed] = store.dishes.splice(index, 1);
+      await persist();
+      return removed;
+    },
     async listCustomerOrders(userId) {
       return store.orders
         .filter((order) => order.customerId === userId)
@@ -458,6 +477,31 @@ async function createPostgresStore(databaseUrl) {
           typeof payload.description === "string" ? payload.description : null,
           typeof payload.available === "boolean" ? payload.available : null,
         ],
+      );
+
+      return result.rows[0] ?? null;
+    },
+    async deleteDish(dishId) {
+      const usage = await pool.query(
+        `
+          select count(*)::int as count
+          from orders
+          where items_json @> $1::jsonb
+        `,
+        [JSON.stringify([{ dishId }])],
+      );
+
+      if (usage.rows[0].count > 0) {
+        return { error: "订单里已经引用过这个菜品，不能直接删除。" };
+      }
+
+      const result = await pool.query(
+        `
+          delete from dishes
+          where id = $1
+          returning id, name, price, image, category, description, available
+        `,
+        [dishId],
       );
 
       return result.rows[0] ?? null;

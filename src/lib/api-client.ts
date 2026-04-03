@@ -133,3 +133,10 @@ export function updateDish(
     body: payload,
   });
 }
+
+export function deleteDish(token: string, dishId: string) {
+  return request<{ dish: Dish }>(`/api/dishes/${dishId}`, {
+    method: "DELETE",
+    token,
+  });
+}

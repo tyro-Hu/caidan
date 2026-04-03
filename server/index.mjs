@@ -296,6 +296,22 @@ app.patch("/api/dishes/:dishId", auth("merchant"), async (req, res) => {
   res.json({ dish });
 });
 
+app.delete("/api/dishes/:dishId", auth("merchant"), async (req, res) => {
+  const result = await store.deleteDish(req.params.dishId);
+
+  if (!result) {
+    res.status(404).json({ message: "菜品不存在" });
+    return;
+  }
+
+  if (result.error) {
+    res.status(400).json({ message: result.error });
+    return;
+  }
+
+  res.json({ dish: result });
+});
+
 app.get("/api/orders/customer", auth("customer"), async (req, res) => {
   const orders = await store.listCustomerOrders(req.user.sub);
   res.json({ orders });

@@ -9,6 +9,7 @@ import type { Order } from "@/lib/app-types";
 import { AccountPanel } from "@/components/account-panel";
 import {
   createDish,
+  deleteDish,
   createMerchantEventsSource,
   fetchManageDishes,
   fetchMerchantOrders,
@@ -263,6 +264,25 @@ export function MerchantDashboard() {
       setMessage(error instanceof Error ? error.message : "新增菜品失败");
     } finally {
       setCreatingDish(false);
+    }
+  }
+
+  async function handleDeleteDish(dishId: string) {
+    if (!session) {
+      return;
+    }
+
+    setUpdatingDishId(dishId);
+    setMessage("");
+
+    try {
+      await deleteDish(session.token, dishId);
+      await loadDishes(session.token);
+      setMessage("菜品已删除。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "删除菜品失败");
+    } finally {
+      setUpdatingDishId("");
     }
   }
 
@@ -680,6 +700,14 @@ export function MerchantDashboard() {
                       className="rounded-full border border-line bg-white/78 px-4 py-2 text-sm font-semibold hover:bg-white"
                     >
                       保存编辑
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updatingDishId === dish.id}
+                      onClick={() => handleDeleteDish(dish.id)}
+                      className="rounded-full border border-[rgba(255,126,138,0.28)] bg-[rgba(255,126,138,0.12)] px-4 py-2 text-sm font-semibold text-[#c64d63] hover:bg-[rgba(255,126,138,0.18)]"
+                    >
+                      删除菜品
                     </button>
                     <span className="text-sm font-semibold text-[rgba(109,77,63,0.72)]">
                       当前价格：{formatCurrency(dish.price)}
