@@ -49,6 +49,24 @@ export function fetchManageDishes(token: string) {
   return request<{ dishes: Dish[] }>("/api/dishes/manage", { token });
 }
 
+export function createDish(
+  token: string,
+  payload: {
+    name: string;
+    price: number;
+    image: string;
+    category: string;
+    description: string;
+    available?: boolean;
+  },
+) {
+  return request<{ dish: Dish }>("/api/dishes", {
+    method: "POST",
+    token,
+    body: payload,
+  });
+}
+
 export function fetchCustomerOrders(token: string) {
   return request<{ orders: Order[] }>("/api/orders/customer", { token });
 }
@@ -100,7 +118,14 @@ export function updatePassword(
 export function updateDish(
   token: string,
   dishId: string,
-  payload: { price?: number; available?: boolean },
+  payload: {
+    name?: string;
+    price?: number;
+    image?: string;
+    category?: string;
+    description?: string;
+    available?: boolean;
+  },
 ) {
   return request<{ dish: Dish }>(`/api/dishes/${dishId}`, {
     method: "PATCH",

@@ -39,8 +39,21 @@ const updatePasswordSchema = z.object({
 });
 
 const updateDishSchema = z.object({
+  name: z.string().trim().min(1).max(60).optional(),
   price: z.number().int().min(1).max(999).optional(),
+  image: z.string().trim().min(1).max(300).optional(),
+  category: z.string().trim().min(1).max(40).optional(),
+  description: z.string().trim().min(1).max(180).optional(),
   available: z.boolean().optional(),
+});
+
+const createDishSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  price: z.number().int().min(1).max(999),
+  image: z.string().trim().min(1).max(300),
+  category: z.string().trim().min(1).max(40),
+  description: z.string().trim().min(1).max(180),
+  available: z.boolean().optional().default(true),
 });
 
 const store = await createStore();
@@ -251,6 +264,18 @@ app.get("/api/dishes/manage", auth("merchant"), async (_req, res) => {
   res.json({
     dishes: await store.listAllDishes(),
   });
+});
+
+app.post("/api/dishes", auth("merchant"), async (req, res) => {
+  const parsed = createDishSchema.safeParse(req.body);
+
+  if (!parsed.success) {
+    res.status(400).json({ message: "菜品数据不完整" });
+    return;
+  }
+
+  const dish = await store.createDish(parsed.data);
+  res.status(201).json({ dish });
 });
 
 app.patch("/api/dishes/:dishId", auth("merchant"), async (req, res) => {

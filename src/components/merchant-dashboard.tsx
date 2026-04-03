@@ -8,6 +8,7 @@ import { LocalNotifications } from "@capacitor/local-notifications";
 import type { Order } from "@/lib/app-types";
 import { AccountPanel } from "@/components/account-panel";
 import {
+  createDish,
   createMerchantEventsSource,
   fetchManageDishes,
   fetchMerchantOrders,
@@ -109,6 +110,17 @@ async function notifyNewOrder(order: Order) {
   }
 }
 
+function createDishDraft(dish?: Dish) {
+  return {
+    name: dish?.name ?? "",
+    price: dish?.price ?? 20,
+    image: dish?.image ?? "/menu/tomato-beef-rice.svg",
+    category: dish?.category ?? "热销主食",
+    description: dish?.description ?? "",
+    available: dish?.available ?? true,
+  };
+}
+
 export function MerchantDashboard() {
   const router = useRouter();
   const { ready, session } = useRoleGuard("merchant");
@@ -117,6 +129,11 @@ export function MerchantDashboard() {
   const [message, setMessage] = useState("");
   const [updatingId, setUpdatingId] = useState("");
   const [updatingDishId, setUpdatingDishId] = useState("");
+  const [creatingDish, setCreatingDish] = useState(false);
+  const [newDish, setNewDish] = useState(createDishDraft());
+  const [dishDrafts, setDishDrafts] = useState<Record<string, ReturnType<typeof createDishDraft>>>(
+    {},
+  );
   const seenOrdersRef = useRef<Set<string>>(new Set());
 
   async function loadOrders(token: string) {
@@ -136,6 +153,9 @@ export function MerchantDashboard() {
   async function loadDishes(token: string) {
     const { dishes: nextDishes } = await fetchManageDishes(token);
     setDishes(nextDishes);
+    setDishDrafts(
+      Object.fromEntries(nextDishes.map((dish) => [dish.id, createDishDraft(dish)])),
+    );
   }
 
   useEffect(() => {
@@ -200,7 +220,14 @@ export function MerchantDashboard() {
 
   async function handleUpdateDish(
     dishId: string,
-    payload: { price?: number; available?: boolean },
+    payload: {
+      name?: string;
+      price?: number;
+      image?: string;
+      category?: string;
+      description?: string;
+      available?: boolean;
+    },
   ) {
     if (!session) {
       return;
@@ -216,6 +243,26 @@ export function MerchantDashboard() {
       setMessage(error instanceof Error ? error.message : "更新菜品失败");
     } finally {
       setUpdatingDishId("");
+    }
+  }
+
+  async function handleCreateDish() {
+    if (!session) {
+      return;
+    }
+
+    setCreatingDish(true);
+    setMessage("");
+
+    try {
+      await createDish(session.token, newDish);
+      setNewDish(createDishDraft());
+      await loadDishes(session.token);
+      setMessage("新菜品已添加。");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "新增菜品失败");
+    } finally {
+      setCreatingDish(false);
     }
   }
 
@@ -429,6 +476,78 @@ export function MerchantDashboard() {
               </div>
             </div>
 
+            <div className="mt-4 rounded-[22px] border border-line bg-white/72 p-4">
+              <p className="text-sm font-semibold text-[#ff6076]">新增菜品</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <input
+                  value={newDish.name}
+                  onChange={(event) =>
+                    setNewDish((current) => ({ ...current, name: event.target.value }))
+                  }
+                  className="rounded-[16px] border border-line bg-white px-3 py-3 text-sm outline-none"
+                  placeholder="菜品名称"
+                />
+                <input
+                  value={newDish.category}
+                  onChange={(event) =>
+                    setNewDish((current) => ({ ...current, category: event.target.value }))
+                  }
+                  className="rounded-[16px] border border-line bg-white px-3 py-3 text-sm outline-none"
+                  placeholder="分类"
+                />
+                <input
+                  type="number"
+                  min={1}
+                  value={newDish.price}
+                  onChange={(event) =>
+                    setNewDish((current) => ({
+                      ...current,
+                      price: Number(event.target.value || 1),
+                    }))
+                  }
+                  className="rounded-[16px] border border-line bg-white px-3 py-3 text-sm outline-none"
+                  placeholder="价格"
+                />
+                <input
+                  value={newDish.image}
+                  onChange={(event) =>
+                    setNewDish((current) => ({ ...current, image: event.target.value }))
+                  }
+                  className="rounded-[16px] border border-line bg-white px-3 py-3 text-sm outline-none"
+                  placeholder="图片链接"
+                />
+              </div>
+              <textarea
+                value={newDish.description}
+                onChange={(event) =>
+                  setNewDish((current) => ({ ...current, description: event.target.value }))
+                }
+                rows={3}
+                className="mt-3 w-full rounded-[16px] border border-line bg-white px-3 py-3 text-sm outline-none"
+                placeholder="菜品描述"
+              />
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <label className="flex items-center gap-2 text-sm text-[rgba(109,77,63,0.72)]">
+                  <input
+                    type="checkbox"
+                    checked={newDish.available}
+                    onChange={(event) =>
+                      setNewDish((current) => ({ ...current, available: event.target.checked }))
+                    }
+                  />
+                  默认上架
+                </label>
+                <button
+                  type="button"
+                  disabled={creatingDish}
+                  onClick={handleCreateDish}
+                  className="rounded-full bg-[#ff8ca3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ff728d]"
+                >
+                  {creatingDish ? "新增中..." : "新增菜品"}
+                </button>
+              </div>
+            </div>
+
             <div className="mt-4 space-y-3">
               {dishes.map((dish) => (
                 <div key={dish.id} className="rounded-[20px] border border-line bg-white/72 p-4">
@@ -461,6 +580,63 @@ export function MerchantDashboard() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <input
+                      value={dishDrafts[dish.id]?.name ?? dish.name}
+                      onChange={(event) =>
+                        setDishDrafts((current) => ({
+                          ...current,
+                          [dish.id]: {
+                            ...(current[dish.id] ?? createDishDraft(dish)),
+                            name: event.target.value,
+                          },
+                        }))
+                      }
+                      className="rounded-[14px] border border-line bg-white px-3 py-2 text-sm outline-none"
+                      placeholder="名称"
+                    />
+                    <input
+                      value={dishDrafts[dish.id]?.category ?? dish.category}
+                      onChange={(event) =>
+                        setDishDrafts((current) => ({
+                          ...current,
+                          [dish.id]: {
+                            ...(current[dish.id] ?? createDishDraft(dish)),
+                            category: event.target.value,
+                          },
+                        }))
+                      }
+                      className="rounded-[14px] border border-line bg-white px-3 py-2 text-sm outline-none"
+                      placeholder="分类"
+                    />
+                    <input
+                      value={dishDrafts[dish.id]?.image ?? dish.image}
+                      onChange={(event) =>
+                        setDishDrafts((current) => ({
+                          ...current,
+                          [dish.id]: {
+                            ...(current[dish.id] ?? createDishDraft(dish)),
+                            image: event.target.value,
+                          },
+                        }))
+                      }
+                      className="min-w-[18rem] rounded-[14px] border border-line bg-white px-3 py-2 text-sm outline-none"
+                      placeholder="图片链接"
+                    />
+                    <textarea
+                      value={dishDrafts[dish.id]?.description ?? dish.description}
+                      onChange={(event) =>
+                        setDishDrafts((current) => ({
+                          ...current,
+                          [dish.id]: {
+                            ...(current[dish.id] ?? createDishDraft(dish)),
+                            description: event.target.value,
+                          },
+                        }))
+                      }
+                      rows={2}
+                      className="w-full rounded-[14px] border border-line bg-white px-3 py-2 text-sm outline-none"
+                      placeholder="描述"
+                    />
                     <button
                       type="button"
                       disabled={updatingDishId === dish.id}
@@ -496,6 +672,14 @@ export function MerchantDashboard() {
                       className="rounded-full bg-[#ff8ca3] px-4 py-2 text-sm font-semibold text-white hover:bg-[#ff728d]"
                     >
                       {dish.available ? "下架" : "重新上架"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={updatingDishId === dish.id}
+                      onClick={() => handleUpdateDish(dish.id, dishDrafts[dish.id] ?? createDishDraft(dish))}
+                      className="rounded-full border border-line bg-white/78 px-4 py-2 text-sm font-semibold hover:bg-white"
+                    >
+                      保存编辑
                     </button>
                     <span className="text-sm font-semibold text-[rgba(109,77,63,0.72)]">
                       当前价格：{formatCurrency(dish.price)}

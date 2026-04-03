@@ -140,14 +140,45 @@ async function createFileStore() {
     async listAllDishes() {
       return [...store.dishes].sort((a, b) => a.category.localeCompare(b.category));
     },
+    async createDish(payload) {
+      const dish = {
+        id: payload.id ?? `dish-${randomUUID().slice(0, 8)}`,
+        name: payload.name,
+        price: payload.price,
+        image: payload.image,
+        category: payload.category,
+        description: payload.description,
+        available: payload.available ?? true,
+      };
+
+      store.dishes.push(dish);
+      await persist();
+      return dish;
+    },
     async updateDish(dishId, payload) {
       const dish = store.dishes.find((item) => item.id === dishId) ?? null;
       if (!dish) {
         return null;
       }
 
+      if (typeof payload.name === "string") {
+        dish.name = payload.name;
+      }
+
       if (typeof payload.price === "number") {
         dish.price = payload.price;
+      }
+
+      if (typeof payload.image === "string") {
+        dish.image = payload.image;
+      }
+
+      if (typeof payload.category === "string") {
+        dish.category = payload.category;
+      }
+
+      if (typeof payload.description === "string") {
+        dish.description = payload.description;
       }
 
       if (typeof payload.available === "boolean") {
@@ -374,19 +405,57 @@ async function createPostgresStore(databaseUrl) {
 
       return result.rows;
     },
+    async createDish(payload) {
+      const dish = {
+        id: payload.id ?? `dish-${randomUUID().slice(0, 8)}`,
+        name: payload.name,
+        price: payload.price,
+        image: payload.image,
+        category: payload.category,
+        description: payload.description,
+        available: payload.available ?? true,
+      };
+
+      const result = await pool.query(
+        `
+          insert into dishes (id, name, price, image, category, description, available)
+          values ($1, $2, $3, $4, $5, $6, $7)
+          returning id, name, price, image, category, description, available
+        `,
+        [
+          dish.id,
+          dish.name,
+          dish.price,
+          dish.image,
+          dish.category,
+          dish.description,
+          dish.available,
+        ],
+      );
+
+      return result.rows[0];
+    },
     async updateDish(dishId, payload) {
       const result = await pool.query(
         `
           update dishes
           set
-            price = coalesce($2, price),
-            available = coalesce($3, available)
+            name = coalesce($2, name),
+            price = coalesce($3, price),
+            image = coalesce($4, image),
+            category = coalesce($5, category),
+            description = coalesce($6, description),
+            available = coalesce($7, available)
           where id = $1
           returning id, name, price, image, category, description, available
         `,
         [
           dishId,
+          typeof payload.name === "string" ? payload.name : null,
           typeof payload.price === "number" ? payload.price : null,
+          typeof payload.image === "string" ? payload.image : null,
+          typeof payload.category === "string" ? payload.category : null,
+          typeof payload.description === "string" ? payload.description : null,
           typeof payload.available === "boolean" ? payload.available : null,
         ],
       );
