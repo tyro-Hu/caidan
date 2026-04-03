@@ -51,6 +51,7 @@ npm run dev:all
 - 适合直接部署到 Render
 - GitHub 仓库：`https://github.com/tyro-Hu/caidan`
 - 目标公网地址：`https://beibei-dian-cai-api.onrender.com`
+- 已在蓝图中补好前端静态站点服务：`beibei-dian-cai-web`
 
 推荐部署方式：
 
@@ -61,7 +62,9 @@ npm run dev:all
    - 一个 Postgres 数据库
 4. 部署完成后拿到类似下面的地址：
    - `https://beibei-dian-cai-api.onrender.com`
-5. 两台手机登录页里的“后端地址”都填这个公网地址
+   - `https://beibei-dian-cai-web.onrender.com`
+5. 你老婆在 iPhone 上打开前端地址点菜
+6. 你在安卓商家端里把后端地址填成 `https://beibei-dian-cai-api.onrender.com`
 
 部署文件：
 
@@ -92,8 +95,8 @@ Render 部署后，健康检查地址会是：
 
 如果改成 Render 公网部署：
 
-1. 不再填写局域网地址
-2. 两台手机都填 `https://beibei-dian-cai-api.onrender.com`
+1. 你老婆的 iPhone 打开前端站点地址，例如 `https://beibei-dian-cai-web.onrender.com`
+2. 你的安卓商家端把后端地址填成 `https://beibei-dian-cai-api.onrender.com`
 3. 即使一个用蜂窝网络，一个用别的 Wi-Fi，也能同步订单
 
 ## 原生与前端命令
@@ -103,6 +106,7 @@ npm run lint
 npm run build
 npm run native:sync
 npm run native:apk
+npm run native:ipa
 npm run native:android
 npm run native:ios
 ```
@@ -110,6 +114,7 @@ npm run native:ios
 含义：
 - `native:sync`：重新构建前端并同步到 Android / iOS 原生工程
 - `native:apk`：直接生成 Android 调试包
+- `native:ipa`：尝试归档并导出 iPhone 真机安装产物
 - `native:android`：同步后打开 Android Studio
 - `native:ios`：同步后打开 Xcode
 
@@ -150,3 +155,9 @@ iOS 工程已经可以：
 - `0 valid identities found`
 
 也就是说，代码和构建环境已经基本打通，最后只差 Apple 开发者签名。
+
+一旦你在 Xcode 里登录了 Apple 开发者账号并拿到签名身份，直接执行：
+
+```bash
+npm run native:ipa
+```
