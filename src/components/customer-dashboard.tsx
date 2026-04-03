@@ -40,6 +40,7 @@ export function CustomerDashboard() {
   const { ready, session } = useRoleGuard("customer");
   const [dishes, setDishes] = useState<Dish[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrderId, setSelectedOrderId] = useState("");
   const [note, setNote] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -98,6 +99,11 @@ export function CustomerDashboard() {
   const historyOrders = orders.filter(
     (order) => order.status === "completed" || order.status === "cancelled",
   );
+  const selectedOrder =
+    orders.find((order) => order.id === selectedOrderId) ??
+    activeOrders[0] ??
+    historyOrders[0] ??
+    null;
 
   function changeQuantity(dishId: string, delta: number) {
     setCart((current) => {
@@ -313,7 +319,16 @@ export function CustomerDashboard() {
                       </div>
                     ) : (
                       activeOrders.map((order) => (
-                        <div key={order.id} className="rounded-[20px] border border-line bg-white/70 p-4">
+                        <button
+                          key={order.id}
+                          type="button"
+                          onClick={() => setSelectedOrderId(order.id)}
+                          className={`w-full rounded-[20px] border p-4 text-left ${
+                            selectedOrder?.id === order.id
+                              ? "border-[#ff8ca3] bg-[rgba(255,140,163,0.08)]"
+                              : "border-line bg-white/70"
+                          }`}
+                        >
                           <div className="flex items-start justify-between gap-4">
                             <div>
                               <p className="text-sm font-semibold text-[#ff6076]">{order.id}</p>
@@ -324,7 +339,7 @@ export function CustomerDashboard() {
                           <p className="mt-3 text-sm leading-7 text-[rgba(109,77,63,0.62)]">
                             {order.items.map((item) => `${item.name} x${item.quantity}`).join(" / ")}
                           </p>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>
@@ -344,7 +359,16 @@ export function CustomerDashboard() {
                       </div>
                     ) : (
                       historyOrders.map((order) => (
-                        <div key={order.id} className="rounded-[20px] border border-line bg-white/70 p-4 opacity-85">
+                        <button
+                          key={order.id}
+                          type="button"
+                          onClick={() => setSelectedOrderId(order.id)}
+                          className={`w-full rounded-[20px] border p-4 text-left opacity-85 ${
+                            selectedOrder?.id === order.id
+                              ? "border-[#ff8ca3] bg-[rgba(255,140,163,0.08)]"
+                              : "border-line bg-white/70"
+                          }`}
+                        >
                           <div className="flex items-start justify-between gap-4">
                             <div>
                               <p className="text-sm font-semibold text-[rgba(109,77,63,0.56)]">
@@ -357,12 +381,78 @@ export function CustomerDashboard() {
                           <p className="mt-3 text-sm leading-7 text-[rgba(109,77,63,0.62)]">
                             {order.items.map((item) => `${item.name} x${item.quantity}`).join(" / ")}
                           </p>
-                        </div>
+                        </button>
                       ))
                     )}
                   </div>
                 </div>
               </div>
+            </section>
+
+            <section className="panel mt-6 rounded-[28px] p-5">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[rgba(109,77,63,0.46)]">
+                订单详情
+              </p>
+              {selectedOrder ? (
+                <div className="mt-4 space-y-4">
+                  <div className="rounded-[20px] border border-line bg-white/72 p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-semibold text-[#ff6076]">{selectedOrder.id}</p>
+                        <p className="mt-2 text-base font-semibold">
+                          {statusLabel(selectedOrder.status)}
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold">
+                        {new Date(selectedOrder.createdAt).toLocaleString("zh-CN")}
+                      </p>
+                    </div>
+                    {selectedOrder.note ? (
+                      <p className="mt-3 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
+                        备注：{selectedOrder.note}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="space-y-3">
+                    {selectedOrder.items.map((item) => (
+                      <div
+                        key={`${selectedOrder.id}-${item.dishId}`}
+                        className="rounded-[20px] border border-line bg-white/72 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              className="h-14 w-14 rounded-[14px] border border-white/70 object-cover"
+                              width={56}
+                              height={56}
+                              unoptimized
+                            />
+                            <div>
+                              <p className="text-base font-semibold">{item.name}</p>
+                              <p className="mt-1 text-sm text-[rgba(109,77,63,0.56)]">
+                                {formatCurrency(item.price)} x {item.quantity}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-sm font-semibold">{formatCurrency(item.subtotal)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-[20px] bg-[#6d4d3f] p-4 text-white">
+                    <p className="text-sm text-white/70">订单总计</p>
+                    <p className="mt-2 text-2xl font-semibold">
+                      {formatCurrency(selectedOrder.total)}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-[20px] border border-dashed border-line bg-white/70 p-4 text-sm leading-7 text-[rgba(109,77,63,0.68)]">
+                  还没有可查看的订单详情。
+                </div>
+              )}
             </section>
 
             <div className="mt-6">

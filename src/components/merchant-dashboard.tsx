@@ -131,6 +131,9 @@ export function MerchantDashboard() {
   const [updatingId, setUpdatingId] = useState("");
   const [updatingDishId, setUpdatingDishId] = useState("");
   const [creatingDish, setCreatingDish] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState("");
+  const [streamStatus, setStreamStatus] = useState<"connecting" | "live" | "offline">("connecting");
   const [newDish, setNewDish] = useState(createDishDraft());
   const [dishDrafts, setDishDrafts] = useState<Record<string, ReturnType<typeof createDishDraft>>>(
     {},
@@ -149,6 +152,7 @@ export function MerchantDashboard() {
     }
 
     setOrders(nextOrders);
+    setLastSyncedAt(new Date().toISOString());
   }
 
   async function loadDishes(token: string) {
@@ -157,6 +161,23 @@ export function MerchantDashboard() {
     setDishDrafts(
       Object.fromEntries(nextDishes.map((dish) => [dish.id, createDishDraft(dish)])),
     );
+  }
+
+  async function handleRefresh() {
+    if (!session) {
+      return;
+    }
+
+    setRefreshing(true);
+    setMessage("");
+
+    try {
+      await Promise.all([loadOrders(session.token), loadDishes(session.token)]);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "刷新失败");
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   useEffect(() => {
@@ -185,14 +206,19 @@ export function MerchantDashboard() {
     }, 4000);
 
     const source = createMerchantEventsSource(session.token);
+    setStreamStatus("connecting");
     source.addEventListener("merchant-orders", () => {
+      setStreamStatus("live");
       loadOrders(session.token).catch(() => {
         return undefined;
       });
     });
+    source.addEventListener("ready", () => {
+      setStreamStatus("live");
+    });
 
     source.onerror = () => {
-      return undefined;
+      setStreamStatus("offline");
     };
 
     return () => {
@@ -337,11 +363,40 @@ export function MerchantDashboard() {
                 新订单会自动提醒。你把安卓手机放在身边，贝贝在 iPhone
                 点单后，这里几秒内就会刷新出来。
               </p>
+              <p className="mt-3 text-xs text-[rgba(109,77,63,0.56)]">
+                最后同步时间：
+                {lastSyncedAt
+                  ? new Date(lastSyncedAt).toLocaleString("zh-CN")
+                  : "尚未同步"}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <div className="rounded-full bg-[rgba(255,140,163,0.16)] px-4 py-2 text-sm font-semibold text-[#ff6076]">
                 待接单 {pendingOrders.length}
               </div>
+              <div
+                className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                  streamStatus === "live"
+                    ? "bg-[rgba(151,214,190,0.22)] text-[#3a7b63]"
+                    : streamStatus === "connecting"
+                      ? "bg-[rgba(109,77,63,0.08)] text-[rgba(109,77,63,0.62)]"
+                      : "bg-[rgba(255,126,138,0.16)] text-[#c64d63]"
+                }`}
+              >
+                {streamStatus === "live"
+                  ? "实时连接中"
+                  : streamStatus === "connecting"
+                    ? "连接中"
+                    : "连接断开"}
+              </div>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="rounded-full border border-line bg-white/78 px-4 py-2 text-sm font-semibold hover:bg-white"
+              >
+                {refreshing ? "刷新中..." : "手动刷新"}
+              </button>
               <button
                 type="button"
                 onClick={logout}
